@@ -2,15 +2,14 @@ import requests
 import os
 from urllib.parse import urlparse
 from dotenv import load_dotenv
+import os.path
 
-load_dotenv()
 
-
-def shorten_link(long_url, token):
+def shorten_link(url, token):
     api_url = 'https://api.vk.com/method/utils.getShortLink'
     payload = {
         "access_token": token,
-        "url": long_url,
+        "url": url,
         'v': '5.199'
     }
 
@@ -38,41 +37,27 @@ def count_clicks(short_link_part, token):
 
 
 def is_shorten_link(url):
-    parsed_url = urlparse(url)
-    netloc = parsed_url.netloc
-    if netloc == 'vk.cc':
-        return True
-    else:
-        return False
+    return url.netloc == 'vk.cc'
+
+
+def get_short_link_part(url, token):
+    return os.path.basename(url.path) if is_shorten_link(url) else os.path.basename(shorten_link(url.geturl(), token))
 
 
 if __name__ == "__main__":
+    load_dotenv()
+
     token = os.environ['TOKEN']
     long_url = input("Введите ссылку: ")
+    url = urlparse(long_url)
 
 
     try:
-        if is_shorten_link(long_url):
-            short_link_part = long_url.split('/')[-1]
-            clicks_count = count_clicks(short_link_part, token)
-            print('Количество кликов по сокращенной ссылке:', clicks_count)
-        else:
-            short_link = shorten_link(long_url, token)
-            print('Сокращенная ссылка:', short_link)
-     
-            short_link_part = short_link.split('/')[-1]
-            clicks_count = count_clicks(short_link_part, token)
-            print('Количество кликов по сокращенной ссылке:', clicks_count)
-
+        short_link_part = get_short_link_part(url, token)
+        clicks_count = count_clicks(short_link_part, token)
+        print('Количество кликов по сокращенной ссылке:', clicks_count)
     except requests.exceptions.HTTPError as err:
-        print(f"Ошибка при обращении к API, проверте на наличие ошибок: {err}")
-
-
-
-
-
-
-
+        print(f"Ошибка при обращении к API, проверьте на наличие ошибок: {err}")
 
 
 
