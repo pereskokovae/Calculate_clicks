@@ -2,7 +2,6 @@ import requests
 import os
 from urllib.parse import urlparse
 from dotenv import load_dotenv
-import os.path
 
 
 def shorten_link(url, token):
@@ -11,13 +10,10 @@ def shorten_link(url, token):
         "access_token": token,
         "url": url,
         'v': '5.199'
-    }
-
+        }
     response = requests.get(api_url, params=payload)
-    response.raise_for_status()  
-
-    short_url = response.json()['response']['short_url']
-    return short_url
+    response.raise_for_status()
+    return response.json()['response']['short_url']
 
 
 def count_clicks(short_link_part, token):
@@ -27,38 +23,41 @@ def count_clicks(short_link_part, token):
         "key": short_link_part,
         "v": "5.199",
         "interval": "forever"
-    }
-
+        }
     response = requests.get(api_url, params=payload)
     response.raise_for_status()
-
-    count_click = response.json()['response']['stats']
-    return count_click
+    return response.json()['response']['stats']
 
 
 def is_shorten_link(url):
     return url.netloc == 'vk.cc'
 
 
-def get_short_link_part(url, token):
-    return os.path.basename(url.path) if is_shorten_link(url) else os.path.basename(shorten_link(url.geturl(), token))
-
-
-if __name__ == "__main__":
+def main():
     load_dotenv()
 
-    token = os.environ['TOKEN']
+    token = os.environ['TG_TOKEN']
     long_url = input("Введите ссылку: ")
     url = urlparse(long_url)
 
 
     try:
-        short_link_part = get_short_link_part(url, token)
-        clicks_count = count_clicks(short_link_part, token)
-        print('Количество кликов по сокращенной ссылке:', clicks_count)
+        if is_shorten_link(url):
+            short_link_part = os.path.basename(url.path)
+            clicks_count = count_clicks(short_link_part, token)
+            print('Количество кликов по сокращенной ссылке:', clicks_count)
+        else:
+            short_link = shorten_link(url.geturl(), token)
+            print('Сокращенная ссылка:', short_link)
+            short_link_part = os.path.basename(urlparse(short_link).path)
+            clicks_count = count_clicks(short_link_part, token)
+            print('Количество кликов по новой сокращенной ссылке:', clicks_count)
     except requests.exceptions.HTTPError as err:
-        print(f"Ошибка при обращении к API, проверьте на наличие ошибок: {err}")
+        print(f"Ошибка при обращении к API, проверте правильность ввода: {err}")
 
+
+if __name__ == "__main__":
+    main()
 
 
 
