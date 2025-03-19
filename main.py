@@ -29,8 +29,21 @@ def count_clicks(short_link_part, token):
     return response.json()['response']['stats']
 
 
-def is_shorten_link(url):
-    return url.netloc == 'vk.cc'
+def is_shorten_link(url, token):
+    api_url = 'https://api.vk.com/method/utils.getLinkStats'
+    short_link_part = os.path.basename(url.path)
+    payload = {
+        "access_token": token,
+        "key": short_link_part,
+        "v": "5.199",
+        "interval": "forever"
+    }
+    try:
+        response = requests.get(api_url, params=payload)
+        response.raise_for_status()
+        return True 
+    except requests.exceptions.HTTPError:
+        return False
 
 
 def main():
@@ -40,20 +53,16 @@ def main():
     long_url = input("Введите ссылку: ")
     url = urlparse(long_url)
 
-
     try:
-        if is_shorten_link(url):
+        if is_shorten_link(url, token):
             short_link_part = os.path.basename(url.path)
             clicks_count = count_clicks(short_link_part, token)
             print('Количество кликов по сокращенной ссылке:', clicks_count)
         else:
             short_link = shorten_link(url.geturl(), token)
             print('Сокращенная ссылка:', short_link)
-            short_link_part = os.path.basename(urlparse(short_link).path)
-            clicks_count = count_clicks(short_link_part, token)
-            print('Количество кликов по новой сокращенной ссылке:', clicks_count)
     except requests.exceptions.HTTPError as err:
-        print(f"Ошибка при обращении к API, проверте правильность ввода: {err}")
+        print(f"Ошибка при обращении к API, проверьте правильность ввода: {err}")
 
 
 if __name__ == "__main__":
