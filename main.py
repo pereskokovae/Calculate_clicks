@@ -52,7 +52,7 @@ def main():
     url = urlparse(long_url)
 
     try:
-        if is_shorten_link(url, token):
+        if is_shorten_link(url.geturl(), token):
             clicks_count = count_clicks(url.path, token)
             print('Количество кликов по сокращенной ссылке:', clicks_count)
         else:
