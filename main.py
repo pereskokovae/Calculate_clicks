@@ -26,7 +26,8 @@ def count_clicks(shorten_link, token):
     }
     response = requests.get(api_url, params=payload)
     response.raise_for_status()
-    return response.json()['response']['stats']
+    stats = response.json()['response']['stats']
+    return stats[0]['views']
 
 
 def is_shorten_link(short_link_part, token):
@@ -52,11 +53,13 @@ def main():
     url = urlparse(long_url)
 
     try:
-        if is_shorten_link(url.geturl(), token):
-            clicks_count = count_clicks(url.path, token)
+        key = url.path.lstrip('/')
+
+        if is_shorten_link(key, token):
+            clicks_count = count_clicks(key, token)
             print('Количество кликов по сокращенной ссылке:', clicks_count)
         else:
-            short_link = shorten_link(url, token)
+            short_link = shorten_link(long_url, token)
             print('Сокращенная ссылка:', short_link)
     except requests.exceptions.HTTPError as err:
         print(f"Ошибка при обращении к API, проверьте правильность ввода: {err}")
