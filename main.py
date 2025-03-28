@@ -2,6 +2,7 @@ import requests
 import os
 from urllib.parse import urlparse
 from dotenv import load_dotenv
+import argparse
 
 
 def shorten_link(url, token):
@@ -47,9 +48,13 @@ def is_shorten_link(short_link_part, token):
 
 def main():
     load_dotenv()
-    
+
+    parser = argparse.ArgumentParser(description='Сокращение ссылок и подсчет кликов.')
+    parser.add_argument('long_url', type=str, help='Длинная ссылка для сокращения')
+    args = parser.parse_args()
+
     token = os.environ['TG_TOKEN']
-    long_url = input("Введите ссылку: ")
+    long_url = args.long_url
     url = urlparse(long_url)
 
     try:
